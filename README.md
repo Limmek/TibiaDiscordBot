@@ -1,2 +1,6 @@
-# DTBot
-Discord Tibia Bot
+# Tibia Discord Bot
+Tibia Discord Bot
+
+# TODO
+* Code cleanup
+* more...
