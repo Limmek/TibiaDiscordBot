@@ -17,18 +17,17 @@ class Core(commands.Cog):
         self._online_task = bot.loop.create_task(self.online_task())
         self.activity_task = bot.loop.create_task(self.activity_task())
 
-    def name_in_tibia_online_list(self):
-        return [player.get('name') for player in self.tibia_online_list] # Returns list of names
+    # Returns list of names from onlinelist
+    def get_tibia_onlinelist_names(self):
+        return [player.get('name') for player in self.tibia_online_list] 
     
     # Returns True if name exist in onlinelist
     def check_tibia_online_list(self, onlinelist, name):
-        if (name in [player.get("name") for player in onlinelist]):
-            return True
+        if (name in [player.get("name") for player in onlinelist]): return True
         return False
 
     # Update Whitelist with default whitelist data
     async def update_default_whitelist(self):
-        await self.bot.wait_until_ready()
         for name in self.config["DEFAULT_WHITELIST"]:
             char = await TibiaData.get_character(name)
             self.sql.addWhitelist(char.name, char.world)
@@ -58,11 +57,14 @@ class Core(commands.Cog):
                     print("Discord: {name} ".format(name=character.name) + ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
                     try:                    
                         embed = discord.Embed(
+                            title=character.name,
+                            url=character.url,
                             description=ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
                             color=0x00c95d,
                         )
                         
-                        embed.set_author(name=character.name, url=character.url)
+                        # Removed due to not seen in notification message on android/ios
+                        #embed.set_author(name=character.name, url=character.url)
                         
                         # Check if user has a custom tumbnail image and add it to embed message
                         Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
@@ -76,14 +78,17 @@ class Core(commands.Cog):
                         
                 # Send level advance message
                 if (self.check_tibia_online_list(self.tibia_online_list, character.name) and int(self.sql.getLevel(character.name)) < int([x["level"] for x in self.tibia_online_list if x["name"] == character.name][0])):    
-                    print("Discord: " + character.name + " advanced to level " + str([x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]))
+                    print("Discord: {name} ".format(name=character.name) + LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]))
                     try:                    
                         embed = discord.Embed(
+                            title=character.name,
+                            url=character.url,
                             description=LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]),
                             color=0xF5A623,
                         )
                         
-                        embed.set_author(name=character.name, url=character.url)
+                        # Removed due to not seen in notification message on android/ios
+                        #embed.set_author(name=character.name, url=character.url)
                         
                         # Check if user has a custom tumbnail image and add it to embed message
                         Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
@@ -96,15 +101,17 @@ class Core(commands.Cog):
                         self.sql.updateOnlinelist(character.name, [x["level"] for x in self.tibia_online_list if x["name"] == character.name][0], 1, 1)
 
                 # Send death message
-                # Todo
                 if (self.check_tibia_online_list(self.tibia_online_list, character.name) and len(character.deaths) >= 1 and (self.sql.getDeathdate(character.name) == None or self.sql.getDeathdate(character.name) != Utils.utc_to_local(character.deaths[0].time))):
-                    print("Death message. #TODO")
+                    print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
                     try:
                         embed = discord.Embed(
+                            title=character.name,
+                            url=character.url,
                             colour=0x992d22
                         )
-                
-                        embed.set_author(name=character.name, url=character.url)
+
+                        # Removed due to not seen in notification message on android/ios
+                        #embed.set_author(name=character.name, url=character.url)
                         
                         for num, item in enumerate(character.deaths):            
                             embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
@@ -136,11 +143,14 @@ class Core(commands.Cog):
                     print("Discord: {name} ".format(name=character.name) + OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
                     try:
                         embed = discord.Embed(
+                            title=character.name,
+                            url=character.url,
                             description=OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
                             color=0xD0021B,
                         )
                         
-                        embed.set_author(name=character.name, url=character.url)
+                        # Removed due to not seen in notification message on android/ios
+                        #embed.set_author(name=character.name, url=character.url)
                         
                         # Check if user has a custom tumbnail image and add it to embed message
                         Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
