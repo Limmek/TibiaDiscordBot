@@ -33,9 +33,9 @@ class TibiaData:
         return world
 
     # Highscores
-    async def get_highscores(world):
+    async def get_highscores(world, category):
         highscores = None
-        url = tibiapy.Highscores.get_url_tibiadata(world)
+        url = tibiapy.Highscores.get_url_tibiadata(world, category)
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as resp:
@@ -47,13 +47,12 @@ class TibiaData:
         return highscores
 
     # Check player name against tibiadata Highscores
-    async def check_player_highscore(name, world):
-        entrie = None
-        highscores = await TibiaData.get_highscores(world = world)
+    async def check_player_highscore(name, world, category):
+        highscores = await TibiaData.get_highscores(world, category)
         for entrie in highscores.entries:
             if (entrie.name == name):
                 return entrie
-        return entrie
+        return None
 
 # tibia.com
 class Tibia:
@@ -101,7 +100,6 @@ class Tibia:
 
     # Check player against tibia.com Highscores
     async def check_player_highscore(name, world):
-        entrie = None
         test = await Tibia.get_highscores(world)
         if test is not None:
             for page in range(test.page, test.total_pages):
@@ -109,11 +107,4 @@ class Tibia:
                 for entrie in test.entries:
                     if (entrie.name == name):
                         return entrie
-        return entrie
-
-async def CheckHighscore(name, world):
-    msg = ""
-    highscore = await TibiaData.check_player_highscore(name, world)
-    if highscore is not None:
-        msg="\nRanked {} on the Experience list".format(highscore.rank)
-    return msg
+        return None

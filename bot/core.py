@@ -72,10 +72,12 @@ class Core(commands.Cog):
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
 
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.updateOnlinelist(character.name, character.level, 1, 1)
-                        
+                    
+                    await self.highscore_check(character, embed, msg)
+
                 # Send level advance message
                 if (self.check_tibia_online_list(self.tibia_online_list, character.name) and int(self.sql.getLevel(character.name)) < int([x["level"] for x in self.tibia_online_list if x["name"] == character.name][0])):    
                     print("Discord: {name} ".format(name=character.name) + LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]))
@@ -96,9 +98,11 @@ class Core(commands.Cog):
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
 
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.updateOnlinelist(character.name, [x["level"] for x in self.tibia_online_list if x["name"] == character.name][0], 1, 1)
+                    
+                    await self.highscore_check(character, embed, msg)
 
                 # Send death message
                 if (self.check_tibia_online_list(self.tibia_online_list, character.name) and len(character.deaths) >= 1 and (self.sql.getDeathdate(character.name) == None or self.sql.getDeathdate(character.name) != Utils.utc_to_local(character.deaths[0].time))):
@@ -123,10 +127,12 @@ class Core(commands.Cog):
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
 
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.addLastDeathTime(character.name, Utils.utc_to_local(character.deaths[0].time))
-            
+                    
+                    await self.highscore_check(character, embed, msg)
+
             #print(LOADING_TIBIA_ONLINELIST.format(self.tibia_online_list))
             
             for name, level, world, deathdate, online, status, date in self.sql.getOnlineList():
@@ -158,9 +164,11 @@ class Core(commands.Cog):
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
 
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.removeFromOnlinelist(character.name)               
+
+                    await self.highscore_check(character, embed, msg)
 
             #print(LOADING_ONLINELIST.format(self.sql.getOnlineList()))
             await asyncio.sleep(30) # task runs every 30 seconds
@@ -170,6 +178,87 @@ class Core(commands.Cog):
         while True:
             await self.bot.change_presence(status=discord.Status.online, activity=discord.Game(name=self.sql.onlineCount()))
             await asyncio.sleep(15) # task runs every 15 seconds
+
+    async def highscore_check(self, character, embed, msg):
+        # Highscores
+        # Check Experience
+        experience = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.EXPERIENCE)
+        if experience is not None:
+            embed.add_field(name=HIGHSCORE_EXP_MESSAGE.format(experience.rank), value=str(experience.value), inline=True)
+            await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check magic level if druid or sorcerer
+        if (character.vocation in [tibiapy.Vocation.DRUID, tibiapy.Vocation.ELDER_DRUID, tibiapy.Vocation.SORCERER, tibiapy.Vocation.MASTER_SORCERER]):
+            magic = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.MAGIC_LEVEL)
+            if magic is not None:
+                
+                embed.add_field(name=HIGHSCORE_MAGIC_MESSAGE.format(magic.rank), value=str(magic.value), inline=True)
+                await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check distance skill if paladin
+        if (character.vocation in [tibiapy.Vocation.PALADIN, tibiapy.Vocation.ROYAL_PALADIN]):
+            distance = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.DISTANCE_FIGHTING)
+            if distance is not None:
+                
+                embed.add_field(name=HIGHSCORE_DISTANCE_MESSAGE.format(distance.rank), value=str(distance.value), inline=True)
+                await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check mele skills if knight
+        if (character.vocation in [tibiapy.Vocation.KNIGHT, tibiapy.Vocation.ELITE_KNIGHT]):
+            # Sword skill
+            sword = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.SWORD_FIGHTING)
+            if sword is not None:
+                
+                embed.add_field(name=HIGHSCORE_SWORD_MESSAGE.format(sword.rank), value=str(sword.value), inline=True)
+                await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+            # Axe skill
+            axe = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.AXE_FIGHTING)
+            if axe is not None:
+                
+                embed.add_field(name=HIGHSCORE_AXE_MESSAGE.format(axe.rank), value=str(axe.value), inline=True)
+                await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+            # Club skill
+            club = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.CLUB_FIGHTING)
+            if club is not None:
+                
+                embed.add_field(name=HIGHSCORE_CLUB_MESSAGE.format(club.rank), value=str(club.value), inline=True)
+                await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check Shielding all vocations
+        shielding = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.SHIELDING)
+        if shielding is not None:
+            
+            embed.add_field(name=HIGHSCORE_SHIELDING_MESSAGE.format(shielding.rank), value=str(shielding.value), inline=True)
+            await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check Fist all vocations
+        fist = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.FIST_FIGHTING)
+        if fist is not None:
+            
+            embed.add_field(name=HIGHSCORE_FIST_MESSAGE.format(fist.rank), value=str(fist.value), inline=True)
+            await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check Fishing all vocations
+        fishing = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.FISHING)
+        if fishing is not None:
+            
+            embed.add_field(name=HIGHSCORE_FISHING_MESSAGE.format(fishing.rank), value=str(fishing.value), inline=True)
+            await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check Fishing all vocations
+        achievements = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.ACHIEVEMENTS)
+        if achievements is not None:
+            
+            embed.add_field(name=HIGHSCORE_ACHIEVEMENTS_MESSAGE.format(achievements.rank), value=str(achievements.value), inline=True)
+            await msg.edit(content=LOADING_MESSAGE, embed=embed)
+
+        # Check Fishing all vocations
+        loyalty = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.LOYALTY_POINTS)
+        if loyalty is not None:
+            embed.add_field(name=HIGHSCORE_LOYALTY_POINTS_MESSAGE.format(loyalty.rank), value=str(loyalty.value), inline=True)
+            await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
 def setup(bot):
     bot.add_cog(Core(bot))

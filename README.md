@@ -15,12 +15,13 @@
 * Player level advance
 
 ### Commands:
-* **add** - Add player to whitelist
-* **exp** - Show players experience change if player is on top 300
-* **pg** - Show players online time
-* **player** - Get information about player by name
-* **remove** - Remove player from whitelist
-* **whitelist** - Show whitelist
+* ***add*** - Add player to whitelist
+* ***exp*** - Show players experience change if player is on top 300
+* ***pg*** - Show players online time
+* ***player*** - Get information about player by name
+* ***rank*** - Get players highscore information
+* ***remove*** - Remove player from whitelist
+* ***whitelist*** - Show whitelist
 
 # TODO
 * fix this
