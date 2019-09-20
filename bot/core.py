@@ -259,6 +259,8 @@ class Core(commands.Cog):
         if loyalty is not None:
             embed.add_field(name=HIGHSCORE_LOYALTY_POINTS_MESSAGE.format(loyalty.rank), value=str(loyalty.value), inline=True)
             await msg.edit(content=LOADING_MESSAGE, embed=embed)
+        
+        await msg.edit(content="")
 
 def setup(bot):
     bot.add_cog(Core(bot))
