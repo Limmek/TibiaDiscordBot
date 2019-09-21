@@ -22,6 +22,7 @@
 * ***rank*** - Get players highscore information
 * ***remove*** - Remove player from whitelist
 * ***whitelist*** - Show whitelist
-
+* ***share*** - Check experience level range of player or level
+* ***rashid*** - Tells where rashid can be found today
 # TODO
 * fix this
