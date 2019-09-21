@@ -263,7 +263,7 @@ class Commands(commands.Cog):
             await msg.edit(content=SHARE_MESSAGE.format(level=level, min=level_min, max=level_max))
 
     @commands.command(name='rashid', aliases=['ra'], brief="Check experience level range of player or level", pass_context=True)
-    async def share(self, ctx):  
+    async def rashid(self, ctx):  
         RASHID_MESSAGES = ["Rashid can be found in {town} today.", "Today Rashid will be found in {town}.", "Today you can find Rashid in {town}."]
         rashid = {
             1:"Svargrond",
