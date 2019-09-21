@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 
+from datetime import datetime
+import random
+
 from constants import *
 from utils import *
 from sqlite import Sql
@@ -237,6 +240,42 @@ class Commands(commands.Cog):
             await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
         await msg.edit(content=LOADING_DONE, embed=embed)
+
+    @commands.command(name='share', aliases=['s'], brief="Check experience level range of player or level", pass_context=True)
+    async def share(self, ctx, *, name):  
+        msg = await ctx.send(content=LOADING_MESSAGE)
+        character = None
+        level = 0
+        
+        if name.isdigit():
+            level = int(name)
+        else:
+            # Get character information from tibiadata.com
+            character = await TibiaData.get_character(name)
+            if character is not None:
+                level = character.level
+        
+        if level == 0:
+            await msg.edit(content=ERROR_LOADING_DATA)
+        else:
+            level_min = round((level/3*2))
+            level_max = round((level*3/2) + 0.5)
+            await msg.edit(content=SHARE_MESSAGE.format(level=level, min=level_min, max=level_max))
+
+    @commands.command(name='rashid', aliases=['ra'], brief="Check experience level range of player or level", pass_context=True)
+    async def share(self, ctx):  
+        RASHID_MESSAGES = ["Rashid can be found in {town} today.", "Today Rashid will be found in {town}.", "Today you can find Rashid in {town}."]
+        rashid = {
+            1:"Svargrond",
+            2:"Liberty Bay",
+            3:"Port Hope",
+            4:"Ankrahmun",
+            5:"Darashia",
+            6:"Edron",
+            7:"Carlin"
+        }
+        #print(RASHID_MESSAGES[random.randrange(0,len(RASHID_MESSAGES))].format(town=rashid.get(datetime.now().isoweekday())))
+        msg = await ctx.send(content=RASHID_MESSAGES[random.randrange(0,len(RASHID_MESSAGES))].format(town=rashid.get(datetime.now().isoweekday())))
 
 def setup(bot):
     bot.add_cog(Commands(bot))
