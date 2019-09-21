@@ -71,7 +71,8 @@ class Core(commands.Cog):
                         
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
-
+                        
+                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
                         msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.updateOnlinelist(character.name, character.level, 1, 1)
@@ -98,6 +99,7 @@ class Core(commands.Cog):
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
 
+                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
                         msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.updateOnlinelist(character.name, [x["level"] for x in self.tibia_online_list if x["name"] == character.name][0], 1, 1)
@@ -127,6 +129,7 @@ class Core(commands.Cog):
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
 
+                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
                         msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.addLastDeathTime(character.name, Utils.utc_to_local(character.deaths[0].time))
@@ -163,7 +166,8 @@ class Core(commands.Cog):
                         
                         # Add function send to multiplie channels
                         # list of channel ids stored in config
-
+                        
+                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
                         msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                     finally:
                         self.sql.removeFromOnlinelist(character.name)               
@@ -176,7 +180,7 @@ class Core(commands.Cog):
     async def activity_task(self):
         await self.bot.wait_until_ready()
         while True:
-            await self.bot.change_presence(status=discord.Status.online, activity=discord.Game(name=self.sql.onlineCount()))
+            await self.bot.change_presence(status=discord.Status.online, activity=discord.Game(name=ACTIVITY_TITLE.format(online=self.sql.onlineCount())))
             await asyncio.sleep(15) # task runs every 15 seconds
 
     async def highscore_check(self, character, embed, msg):
