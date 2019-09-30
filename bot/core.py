@@ -37,143 +37,154 @@ class Core(commands.Cog):
         while True:
             self.tibia_online_list = []
             for name in self.sql.getWhitelistNames():
-                # Get player info from tibiadata.com
-                character = await Tibia.get_character(name) 
-                if character is None: return True
-                # Get world data from tibia.com
-                world = await Tibia.get_world(character.world) 
-                if world is None: return True
+                try:
+                    # Get player info from tibiadata.com
+                    character = await Tibia.get_character(name) 
+                    if character is None: return True
+                    # Get world data from tibia.com
+                    world = await Tibia.get_world(character.world) 
+                    if world is None: return True
                 
-                for online_player in world.online_players:
-                    # Adds name and level from world online list if player is online
-                    if online_player.name == character.name:
-                        self.sql.addToOnlinelist(name=character.name, level=online_player.level, world=character.world, deathdate=[Utils.utc_to_local(character.deaths[0].time) if character.deaths else ""][0])
-                        #if not online_player.name in [player.get('name') for player in self.tibia_online_list]:
-                        if not self.check_tibia_online_list(self.tibia_online_list, online_player.name):
-                            self.tibia_online_list.append({"name":online_player.name, "level":online_player.level, "world":character.world})
-                                     
-                # Send online message
-                if (self.check_tibia_online_list(self.tibia_online_list, character.name) and self.sql.getOnline(character.name) and not self.sql.getStatus(character.name)):
-                    print("Discord: {name} ".format(name=character.name) + ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
-                    try:                    
-                        embed = discord.Embed(
-                            title=character.name,
-                            url=character.url,
-                            description=ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
-                            color=0x00c95d,
-                        )
-                        
-                        # Removed due to not seen in notification message on android/ios
-                        #embed.set_author(name=character.name, url=character.url)
-                        
-                        # Check if user has a custom tumbnail image and add it to embed message
-                        Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
-                        
-                        # Add function send to multiplie channels
-                        # list of channel ids stored in config
-                        
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
-                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
-                    finally:
-                        self.sql.updateOnlinelist(character.name, character.level, 1, 1)
-                    
-                    await self.highscore_check(character, embed, msg)
+                except Exception as e:
+                    print(e)
+                    pass
 
-                # Send level advance message
-                if (self.check_tibia_online_list(self.tibia_online_list, character.name) and int(self.sql.getLevel(character.name)) < int([x["level"] for x in self.tibia_online_list if x["name"] == character.name][0])):    
-                    print("Discord: {name} ".format(name=character.name) + LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]))
-                    try:                    
-                        embed = discord.Embed(
-                            title=character.name,
-                            url=character.url,
-                            description=LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]),
-                            color=0xF5A623,
-                        )
+                finally:
+                    for online_player in world.online_players:
+                        # Adds name and level from world online list if player is online
+                        if online_player.name == character.name:
+                            self.sql.addToOnlinelist(name=character.name, level=online_player.level, world=character.world, deathdate=[Utils.utc_to_local(character.deaths[0].time) if character.deaths else ""][0])
+                            #if not online_player.name in [player.get('name') for player in self.tibia_online_list]:
+                            if not self.check_tibia_online_list(self.tibia_online_list, online_player.name):
+                                self.tibia_online_list.append({"name":online_player.name, "level":online_player.level, "world":character.world})
+                                        
+                    # Send online message
+                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and self.sql.getOnline(character.name) and not self.sql.getStatus(character.name)):
+                        print("Discord: {name} ".format(name=character.name) + ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
+                        try:                    
+                            embed = discord.Embed(
+                                title=character.name,
+                                url=character.url,
+                                description=ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
+                                color=0x00c95d,
+                            )
+                            
+                            # Removed due to not seen in notification message on android/ios
+                            #embed.set_author(name=character.name, url=character.url)
+                            
+                            # Check if user has a custom tumbnail image and add it to embed message
+                            Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
+                            
+                            # Add function send to multiplie channels
+                            # list of channel ids stored in config
+                            
+                            await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
+                            msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        finally:
+                            self.sql.updateOnlinelist(character.name, character.level, 1, 1)
                         
-                        # Removed due to not seen in notification message on android/ios
-                        #embed.set_author(name=character.name, url=character.url)
+                        await self.highscore_check(character, embed, msg)
+
+                    # Send level advance message
+                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and int(self.sql.getLevel(character.name)) < int([x["level"] for x in self.tibia_online_list if x["name"] == character.name][0])):    
+                        print("Discord: {name} ".format(name=character.name) + LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]))
+                        try:                    
+                            embed = discord.Embed(
+                                title=character.name,
+                                url=character.url,
+                                description=LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]),
+                                color=0xF5A623,
+                            )
+                            
+                            # Removed due to not seen in notification message on android/ios
+                            #embed.set_author(name=character.name, url=character.url)
+                            
+                            # Check if user has a custom tumbnail image and add it to embed message
+                            Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
+                            
+                            # Add function send to multiplie channels
+                            # list of channel ids stored in config
+
+                            await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
+                            msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        finally:
+                            self.sql.updateOnlinelist(character.name, [x["level"] for x in self.tibia_online_list if x["name"] == character.name][0], 1, 1)
                         
-                        # Check if user has a custom tumbnail image and add it to embed message
-                        Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
-                        
-                        # Add function send to multiplie channels
-                        # list of channel ids stored in config
+                        await self.highscore_check(character, embed, msg)
 
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
-                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
-                    finally:
-                        self.sql.updateOnlinelist(character.name, [x["level"] for x in self.tibia_online_list if x["name"] == character.name][0], 1, 1)
-                    
-                    await self.highscore_check(character, embed, msg)
+                    # Send death message
+                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and len(character.deaths) >= 1 and (self.sql.getDeathdate(character.name) == None or self.sql.getDeathdate(character.name) != Utils.utc_to_local(character.deaths[0].time))):
+                        print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
+                        try:
+                            embed = discord.Embed(
+                                title=character.name,
+                                url=character.url,
+                                colour=0x992d22
+                            )
 
-                # Send death message
-                if (self.check_tibia_online_list(self.tibia_online_list, character.name) and len(character.deaths) >= 1 and (self.sql.getDeathdate(character.name) == None or self.sql.getDeathdate(character.name) != Utils.utc_to_local(character.deaths[0].time))):
-                    print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
-                    try:
-                        embed = discord.Embed(
-                            title=character.name,
-                            url=character.url,
-                            colour=0x992d22
-                        )
+                            # Removed due to not seen in notification message on android/ios
+                            #embed.set_author(name=character.name, url=character.url)
+                            
+                            for num, item in enumerate(character.deaths):            
+                                embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
+                                break
+                            
+                            # Check if user has a custom tumbnail image and add it to embed message
+                            Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
 
-                        # Removed due to not seen in notification message on android/ios
-                        #embed.set_author(name=character.name, url=character.url)
-                        
-                        for num, item in enumerate(character.deaths):            
-                            embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
-                            break
-                        
-                        # Check if user has a custom tumbnail image and add it to embed message
-                        Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
+                            # Add function send to multiplie channels
+                            # list of channel ids stored in config
 
-                        # Add function send to multiplie channels
-                        # list of channel ids stored in config
-
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
-                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
-                    finally:
-                        self.sql.addLastDeathTime(character.name, Utils.utc_to_local(character.deaths[0].time))
-                    
-                    await self.highscore_check(character, embed, msg)
+                            await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
+                            msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        finally:
+                            self.sql.addLastDeathTime(character.name, Utils.utc_to_local(character.deaths[0].time))
+                            await self.highscore_check(character, embed, msg)
 
             #print(LOADING_TIBIA_ONLINELIST.format(self.tibia_online_list))
             
             for name, level, world, deathdate, online, status, date in self.sql.getOnlineList():
-                # Get player info from tibiadata.com
-                character = await Tibia.get_character(name) 
-                if character is None: return True
-
-                # Update online list if player is offline
-                if not self.check_tibia_online_list(self.tibia_online_list, character.name):
-                    self.sql.updateOnlinelist(character.name, character.level, 0, 1)
+                try:
+                    # Get player info from tibiadata.com
+                    character = await Tibia.get_character(name) 
+                    if character is None: return True
                 
-                # Send offline message
-                if not self.check_tibia_online_list(self.tibia_online_list, character.name) and not self.sql.getOnline(character.name) and self.sql.getStatus(character.name):
-                    print("Discord: {name} ".format(name=character.name) + OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
-                    try:
-                        embed = discord.Embed(
-                            title=character.name,
-                            url=character.url,
-                            description=OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
-                            color=0xD0021B,
-                        )
-                        
-                        # Removed due to not seen in notification message on android/ios
-                        #embed.set_author(name=character.name, url=character.url)
-                        
-                        # Check if user has a custom tumbnail image and add it to embed message
-                        Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
-                        
-                        # Add function send to multiplie channels
-                        # list of channel ids stored in config
-                        
-                        await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
-                        msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
-                    finally:
-                        self.sql.removeFromOnlinelist(character.name)               
+                except Exception as e:
+                    print(e)
+                    pass
+                
+                finally:
+                    # Update online list if player is offline
+                    if not self.check_tibia_online_list(self.tibia_online_list, character.name):
+                        self.sql.updateOnlinelist(character.name, character.level, 0, 1)
+                    
+                    # Send offline message
+                    if not self.check_tibia_online_list(self.tibia_online_list, character.name) and not self.sql.getOnline(character.name) and self.sql.getStatus(character.name):
+                        print("Discord: {name} ".format(name=character.name) + OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
+                        try:
+                            embed = discord.Embed(
+                                title=character.name,
+                                url=character.url,
+                                description=OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
+                                color=0xD0021B,
+                            )
+                            
+                            # Removed due to not seen in notification message on android/ios
+                            #embed.set_author(name=character.name, url=character.url)
+                            
+                            # Check if user has a custom tumbnail image and add it to embed message
+                            Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
+                            
+                            # Add function send to multiplie channels
+                            # list of channel ids stored in config
+                            
+                            await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
+                            msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                        finally:
+                            self.sql.removeFromOnlinelist(character.name)               
 
-                    await self.highscore_check(character, embed, msg)
-
+                        await self.highscore_check(character, embed, msg)
+                
             #print(LOADING_ONLINELIST.format(self.sql.getOnlineList()))
             await asyncio.sleep(30) # task runs every 30 seconds
 
