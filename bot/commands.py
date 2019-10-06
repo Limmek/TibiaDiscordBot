@@ -41,7 +41,7 @@ class Commands(commands.Cog):
             await ctx.send(content=ERROR_LOADING_DATA)
             return True
 
-        whitelist = self.sql.addWhitelist(character.name, character.world)
+        whitelist = self.sql.addWhitelist(character.name, character.world, character.level)
         msg = await ctx.send(LODING_CHARACTER_DATA)
         await msg.edit(content=ADD_WHITELIST_MESSAGE.format(name=character.name, level=character.level, voc=character.vocation, world=character.world)) 
             
@@ -268,6 +268,7 @@ class Commands(commands.Cog):
         level = 0
         
         if name.isdigit():
+            # If a int value(levle) is entered instead for character name
             level = int(name)
         else:
             # Get character information from tibiadata.com
@@ -277,10 +278,23 @@ class Commands(commands.Cog):
         
         if level == 0:
             await ctx.send(content=ERROR_LOADING_DATA)
-        else:
-            level_min = round((level/3*2))
-            level_max = round((level*3/2) + 0.5)
-            await ctx.send(content=SHARE_MESSAGE.format(level=level, min=level_min, max=level_max))
+            return
+        
+        level_min = round((level/3*2))
+        level_max = round((level*3/2) + 0.5)
+        msg = await ctx.send(content=SHARE_MESSAGE.format(level=level, min=level_min, max=level_max) if name.isdigit() else SHARE_PLAYER_MESSAGE.format(name=character.name, level=character.level, min=level_min, max=level_max)
+        )
+
+        # Check if whitelisted player is able to share exp
+        update = False
+        embed = discord.Embed(colour=0xffffff)
+        for name, world, level in self.sql.getWhitelist():
+            if level >= level_min and level <= level_max and world == character.world and name != character.name:
+                embed.add_field(name=name, value='Level: '+str(level), inline=True)
+                update = True
+        
+        if update:
+            await msg.edit(embed=embed)
 
     @commands.command(name='rashid', aliases=['ra'], brief="Tells where rashid can be found today", pass_context=True)
     async def rashid(self, ctx):  

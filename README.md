@@ -24,5 +24,7 @@
 * ***whitelist*** - Show whitelist
 * ***share*** - Check experience level range of player or level
 * ***rashid*** - Tells where rashid can be found today
-# TODO
-* fix this
+
+
+# Changelog
+* Addded whitelist player level check to share command.

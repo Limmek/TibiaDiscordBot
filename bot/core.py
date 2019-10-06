@@ -30,7 +30,7 @@ class Core(commands.Cog):
     async def update_default_whitelist(self):
         for name in self.config["DEFAULT_WHITELIST"]:
             char = await TibiaData.get_character(name)
-            self.sql.addWhitelist(char.name, char.world)
+            self.sql.addWhitelist(char.name, char.world, int(char.level))
 
     async def online_task(self):
         await self.bot.wait_until_ready()
@@ -50,6 +50,9 @@ class Core(commands.Cog):
                     pass
 
                 finally:
+                    # Update whitelist player level
+                    self.sql.updateWhitelistLevel(character.name, int(character.level))
+                    
                     for online_player in world.online_players:
                         # Adds name and level from world online list if player is online
                         if online_player.name == character.name:

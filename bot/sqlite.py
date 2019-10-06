@@ -36,22 +36,22 @@ class Sql():
                         (name text UNIQUE, level int, world text, deathdate text, online int, status int, date text)''')
 
         cur.execute('''CREATE TABLE IF NOT EXISTS whitelist
-                        (name text UNIQUE, world text, date text)''')
+                        (name text UNIQUE, world text, level int, date text)''')
         self.conn.commit()
 
-    def addWhitelist(self, name, world):
+    def addWhitelist(self, name, world, level):
         cur = self.conn.cursor()
-        val = [name, world, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
-        sql = cur.execute("INSERT OR IGNORE INTO whitelist values (?,?,?)", val)
+        val = [name, world, level, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+        sql = cur.execute("INSERT OR IGNORE INTO whitelist values (?,?,?,?)", val)
         self.conn.commit()
         return sql
 
     def getWhitelist(self):
         cur = self.conn.cursor()
-        result = cur.execute("SELECT name, world FROM whitelist").fetchall()
+        result = cur.execute("SELECT name, world, level FROM whitelist").fetchall()
         whitelist = []
-        for name, world in result:
-            whitelist.append([name, world])
+        for name, world, level in result:
+            whitelist.append([name, world, level])
         return whitelist
     
     def getWhitelistNames(self):
@@ -61,6 +61,13 @@ class Sql():
         for name in result:
             whitelist.append(name[0])
         return whitelist
+
+    def updateWhitelistLevel(self, name, level):
+        cur = self.conn.cursor()
+        val = [level, name]
+        sql = cur.execute("UPDATE whitelist SET level=? WHERE name=?", val)
+        self.conn.commit()
+        return sql
 
     def getOnlineList(self):
         cur = self.conn.cursor()
@@ -121,7 +128,7 @@ class Sql():
     def updateOnlinelist(self, name, level, online=0, status=0):
         cur = self.conn.cursor()
         val = [level, online, status, name]
-        sql = cur.execute("UPDATE online SET level=?,online=?,status=? WHERE name=?", val)
+        sql = cur.execute("UPDATE online SET level=?, online=?, status=? WHERE name=?", val)
         self.conn.commit()
         return sql
     
