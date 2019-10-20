@@ -34,7 +34,8 @@ class Core(commands.Cog):
 
     async def online_task(self):
         await self.bot.wait_until_ready()
-        while True:
+                  
+        async def start_task(self):
             self.tibia_online_list = []
             for name in self.sql.getWhitelistNames():
                 try:
@@ -46,7 +47,7 @@ class Core(commands.Cog):
                     if world is None: return True
                 
                 except Exception as e:
-                    print(e)
+                    print("online_task exception (whitelist): " + e)
                     pass
 
                 finally:
@@ -69,7 +70,7 @@ class Core(commands.Cog):
                                 title=character.name,
                                 url=character.url,
                                 description=ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
-                                color=0x00c95d,
+                                color=Utils.colors['GREEN'],
                             )
                             
                             # Removed due to not seen in notification message on android/ios
@@ -96,7 +97,7 @@ class Core(commands.Cog):
                                 title=character.name,
                                 url=character.url,
                                 description=LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]),
-                                color=0xF5A623,
+                                color=Utils.colors['GOLD'],
                             )
                             
                             # Removed due to not seen in notification message on android/ios
@@ -116,33 +117,33 @@ class Core(commands.Cog):
                         await self.highscore_check(character, embed, msg)
 
                     # Send death message
-                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and len(character.deaths) >= 1 and (self.sql.getDeathdate(character.name) == None or self.sql.getDeathdate(character.name) != Utils.utc_to_local(character.deaths[0].time))):
-                        print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
-                        try:
-                            embed = discord.Embed(
-                                title=character.name,
-                                url=character.url,
-                                colour=0x992d22
-                            )
+                    for num, item in enumerate(character.deaths):
+                        if (self.check_tibia_online_list(self.tibia_online_list, character.name) and (self.sql.getDeathdate(character.name) == None or self.sql.getDeathdate(character.name) != Utils.utc_to_local(item.time))):
+                            print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=character.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
+                            try:
+                                embed = discord.Embed(
+                                    title=character.name,
+                                    url=character.url,
+                                    colour=Utils.colors['DARK_BUT_NOT_BLACK']
+                                )
 
-                            # Removed due to not seen in notification message on android/ios
-                            #embed.set_author(name=character.name, url=character.url)
-                            
-                            for num, item in enumerate(character.deaths):            
+                                # Removed due to not seen in notification message on android/ios
+                                #embed.set_author(name=character.name, url=character.url)
+                                        
                                 embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
-                                break
-                            
-                            # Check if user has a custom tumbnail image and add it to embed message
-                            Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
+                                
+                                # Check if user has a custom tumbnail image and add it to embed message
+                                Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
 
-                            # Add function send to multiplie channels
-                            # list of channel ids stored in config
+                                # Add function send to multiplie channels
+                                # list of channel ids stored in config
 
-                            await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
-                            msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
-                        finally:
-                            self.sql.addLastDeathTime(character.name, Utils.utc_to_local(character.deaths[0].time))
-                            await self.highscore_check(character, embed, msg)
+                                await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
+                                msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                            finally:
+                                self.sql.addLastDeathTime(character.name, Utils.utc_to_local(item.time))  
+                                await self.highscore_check(character, embed, msg)
+                        break
 
             #print(LOADING_TIBIA_ONLINELIST.format(self.tibia_online_list))
             
@@ -153,7 +154,7 @@ class Core(commands.Cog):
                     if character is None: return True
                 
                 except Exception as e:
-                    print(e)
+                    print("online_task exception (onlinelist): " + e)
                     pass
                 
                 finally:
@@ -169,7 +170,7 @@ class Core(commands.Cog):
                                 title=character.name,
                                 url=character.url,
                                 description=OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
-                                color=0xD0021B,
+                                color=Utils.colors['DARK_RED'],
                             )
                             
                             # Removed due to not seen in notification message on android/ios
@@ -189,7 +190,12 @@ class Core(commands.Cog):
                         await self.highscore_check(character, embed, msg)
                 
             #print(LOADING_ONLINELIST.format(self.sql.getOnlineList()))
-            await asyncio.sleep(30) # task runs every 30 seconds
+            #await asyncio.sleep(30) # task runs every 30 seconds
+
+        while True:
+            asyncio.create_task(start_task(self)) # Fix for loop breaking if any error ocurred while runing online_task??
+            await asyncio.sleep(60) # run task in seperate thread every 60 seconds
+
 
     async def activity_task(self):
         await self.bot.wait_until_ready()

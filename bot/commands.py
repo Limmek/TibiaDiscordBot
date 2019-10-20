@@ -16,6 +16,23 @@ class Commands(commands.Cog):
         self.config = Config.load_config()
         self.sql = Sql()
 
+    @commands.command(name='shutdown', aliases=[], brief="Shutdown", pass_context=True, hidden=True)
+    async def shutdown(self, ctx):
+        msg = await ctx.send("Shuting down....")
+        await self.bot.logout()
+
+    @commands.command(name='restart', aliases=[], brief="Restart", pass_context=True, hidden=True)
+    async def restart(self, ctx):
+        msg = await ctx.send("Shuting down")
+        await ctx.trigger_typing()
+        try:
+            await self.bot.close()
+        except:
+            pass
+        finally:
+            os.system("py -3 " + os.path.dirname(os.path.realpath(__file__)) + "\\bot.py")
+            
+
     @commands.command(name='whitelist', aliases=['wl', 'wlist'], brief="Show whitelist")
     async def whitelist(self, ctx):
         msg = await ctx.send(LOADING_WHITELIST_MESSAGE)
@@ -23,9 +40,15 @@ class Commands(commands.Cog):
         whitelist = self.sql.getWhitelist()
         embed = discord.Embed(
             title=TITLE_WHITELIST,
-            colour=0xffffff
+            colour=Utils.colors['WHITE']
         )
-        for name, world in whitelist:
+
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
+        )
+
+        for name, world, level in whitelist:
             character = await TibiaData.get_character(name) # Get character information from tibiadata.com
             text = "{} {} on {}".format(character.level, character.vocation, character.world)
             embed.add_field(name=name, value=text, inline=False)
@@ -75,7 +98,12 @@ class Commands(commands.Cog):
         embed = discord.Embed(
             title=TITLE_ONLINE_TIME,
             description=DESCRIPTION_ONLINE_TIME.format(name=character.name, level=character.level, voc=character.vocation, world=character.world, url=character.url),
-            colour=0xffffff,
+            colour=Utils.colors['DARK_GREEN'],
+        )
+
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
         )
         embed.add_field(name="Last month", value=str(timeOnline["Last month"]), inline=True)
         embed.add_field(name="Current month", value=str(timeOnline["Current month"]), inline=True)
@@ -114,7 +142,12 @@ class Commands(commands.Cog):
         embed = discord.Embed(
             title=TITLE_EXPERIENCE_CHANGE,
             description="",
-            colour=0xffffff
+            colour=Utils.colors['DARK_GREEN']
+        )
+
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
         )
         
         for item in expChange:
@@ -134,7 +167,14 @@ class Commands(commands.Cog):
             await ctx.send(content=ERROR_LOADING_DATA)
             return True
         
-        embed = discord.Embed(colour=0xffffff)
+        embed = discord.Embed(
+            colour=Utils.colors['ORANGE']
+        )
+        
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
+        )
         
         embed.set_author(name=character.name, url=character.url)
         
@@ -168,7 +208,7 @@ class Commands(commands.Cog):
 
         await msg.edit(content=LOADING_DONE, embed=embed)
 
-    @commands.command(name='rank', aliases=['top', 'r'], brief="Get players highscore information", pass_context=True)
+    @commands.command(name='rank', aliases=['top'], brief="Get players highscore information", pass_context=True)
     async def rank(self, ctx, *, name):  
         await ctx.trigger_typing()
 
@@ -180,8 +220,14 @@ class Commands(commands.Cog):
             return True
         
         embed = discord.Embed(
-            colour=0xffffff,
+            colour=Utils.colors['DARK_ORANGE'],
         )
+
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
+        )
+
         embed.set_author(name=character.name, url=character.url)
         
         msg = await ctx.send(content=LOADING_MESSAGE)
@@ -264,6 +310,15 @@ class Commands(commands.Cog):
     async def share(self, ctx, *, name):  
         await ctx.trigger_typing()
         
+        embed = discord.Embed(
+            colour=Utils.colors['DARK_ORANGE']
+        )
+        
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
+        )
+
         character = None
         level = 0
         
@@ -282,23 +337,33 @@ class Commands(commands.Cog):
         
         level_min = round((level/3*2))
         level_max = round((level*3/2) + 0.5)
-        msg = await ctx.send(content=SHARE_MESSAGE.format(level=level, min=level_min, max=level_max) if name.isdigit() else SHARE_PLAYER_MESSAGE.format(name=character.name, level=character.level, min=level_min, max=level_max)
-        )
+
+        embed.title = SHARE_MESSAGE.format(level=level, min=level_min, max=level_max) if name.isdigit() else SHARE_PLAYER_MESSAGE.format(name=character.name, level=character.level, min=level_min, max=level_max)
+        
+        msg = await ctx.send(content=EMBED_BLANK, embed=embed)
 
         # Check if whitelisted player is able to share exp
         update = False
-        embed = discord.Embed(colour=0xffffff)
-        for name, world, level in self.sql.getWhitelist():
-            if level >= level_min and level <= level_max and world == character.world and name != character.name:
-                embed.add_field(name=name, value='Level: '+str(level), inline=True)
-                update = True
+        if not name.isdigit():
+            for name, world, level in self.sql.getWhitelist():
+                if level >= level_min and level <= level_max and world == character.world and name != character.name:
+                    embed.add_field(name=name, value='Level: '+str(level), inline=True)
+                    update = True
         
         if update:
             await msg.edit(embed=embed)
 
-    @commands.command(name='rashid', aliases=['ra'], brief="Tells where rashid can be found today", pass_context=True)
+    @commands.command(name='rashid', aliases=['r'], brief="Tells where rashid can be found today", pass_context=True)
     async def rashid(self, ctx):  
         await ctx.trigger_typing()
+        embed = discord.Embed(
+            colour=Utils.colors['DARK_ORANGE']
+        )
+        
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
+        )
         RASHID_MESSAGES = ["Rashid can be found in {town} today.", "Today Rashid will be found in {town}.", "Today you can find Rashid in {town}."]
         rashid = {
             1:"Svargrond",
@@ -309,8 +374,22 @@ class Commands(commands.Cog):
             6:"Edron",
             7:"Carlin"
         }
+        embed.title = RASHID_MESSAGES[random.randrange(0,len(RASHID_MESSAGES))].format(town=rashid.get(datetime.now().isoweekday()))
+        msg = await ctx.send(content=EMBED_BLANK, embed=embed)
+
+    @commands.command(name='check_yasir', aliases=['yasir', 'y'], brief="Yasir information from https://yasironline.tibiageeks.com", pass_context=True)
+    async def check_yasir(self, ctx):
+
+        embed = discord.Embed(
+            colour=Utils.colors['WHITE']
+        )
+
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
+        )
         
-        msg = await ctx.send(content=RASHID_MESSAGES[random.randrange(0,len(RASHID_MESSAGES))].format(town=rashid.get(datetime.now().isoweekday())))
+        msg = await ctx.send(content='Yasir #TODO', embed=embed)
 
 def setup(bot):
     bot.add_cog(Commands(bot))

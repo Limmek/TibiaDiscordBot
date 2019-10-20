@@ -109,7 +109,10 @@ class Sql():
     def getDeathdate(self, name):
         cur = self.conn.cursor()
         val = [name]
-        return str(cur.execute("SELECT deathdate FROM online WHERE name=?", val).fetchone()[0])
+        ret = cur.execute("SELECT deathdate FROM online WHERE name=?", val).fetchone()
+        if ret is not None:
+            return str(ret[0])
+        return ret
     
     def addLastDeathTime(self, name, deathdate):
         cur = self.conn.cursor()
