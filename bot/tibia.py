@@ -122,3 +122,18 @@ class Tibia:
                     if (entrie.name == name):
                         return entrie
         return None
+
+
+    # Get news from tibia.com
+    async def get_news(news_id=1):
+        url = tibiapy.News.get_url(news_id)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    content = await resp.text()
+            news = tibiapy.News.from_content(content, news_id)
+        
+        except Exception as e:
+            print(str(e))
+            pass
+        return news

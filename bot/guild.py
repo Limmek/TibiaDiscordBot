@@ -7,7 +7,6 @@ from constants import *
 from utils import *
 from sqlite import Sql
 from tibia import *
-from guildstatseu import GuildStats
 
 class Guild(commands.Cog):
     def __init__(self, bot):

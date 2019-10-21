@@ -2,3 +2,4 @@
 discord.py
 tibia.py
 asyncio
+beautifulsoup4

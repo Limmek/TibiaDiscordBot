@@ -30,6 +30,12 @@ class Sql():
             self.cursor.close()
             self.conn.close()
     
+    def executeQuery(self, query, values):
+        self.conn.cursor()
+        sql = self.conn.execute(query, values)
+        self.conn.commit()
+        return sql
+
     def createTables(self):
         cur = self.conn.cursor()
         cur.execute('''CREATE TABLE IF NOT EXISTS online
@@ -37,6 +43,11 @@ class Sql():
 
         cur.execute('''CREATE TABLE IF NOT EXISTS whitelist
                         (name text UNIQUE, world text, level int, date text)''')
+        self.conn.commit()
+
+    def createTable(self, data):
+        cur = self.conn.cursor()
+        cur.execute(data)
         self.conn.commit()
 
     def addWhitelist(self, name, world, level):
