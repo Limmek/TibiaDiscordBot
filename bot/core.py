@@ -15,7 +15,7 @@ class Core(commands.Cog):
         self.tibia_online_list = []
         self._update_task = bot.loop.create_task(self.update_default_whitelist())
         self._online_task = bot.loop.create_task(self.online_task())
-        self.activity_task = bot.loop.create_task(self.activity_task())
+        self._activity_task = bot.loop.create_task(self.activity_task())
 
     # Returns list of names from onlinelist
     def get_tibia_onlinelist_names(self):

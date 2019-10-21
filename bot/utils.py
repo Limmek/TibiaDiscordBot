@@ -67,6 +67,7 @@ class Config:
             'TOKEN': '',
             'CHANNEL_ID': '',
             'PREFIX': "! -",
+            'GUILD_NAME': "",
             'DEFAULT_WHITELIST': {}
         }
         with open(file, 'w') as json_file:

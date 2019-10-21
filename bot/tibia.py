@@ -54,6 +54,20 @@ class TibiaData:
                 return entrie
         return None
 
+    # Character info
+    async def get_guild(name):
+        guild = None
+        url = tibiapy.Guild.get_url_tibiadata(name)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    content = await resp.text()
+            guild = tibiapy.Guild.from_tibiadata(content)
+        except Exception as e:
+            print(str(e))
+            pass
+        return guild
+
 # tibia.com
 class Tibia:
     # Character info
