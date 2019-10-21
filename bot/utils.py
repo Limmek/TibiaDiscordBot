@@ -68,6 +68,7 @@ class Config:
             'CHANNEL_ID': '',
             'PREFIX': "! -",
             'GUILD_NAME': "",
+            'TIBIA_ROLE': "",
             'DEFAULT_WHITELIST': {}
         }
         with open(file, 'w') as json_file:

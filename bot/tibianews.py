@@ -52,13 +52,13 @@ class TibiaNews(commands.Cog):
                 finally:
                     self.sql.executeQuery("UPDATE tibia_news_ticker SET status=? WHERE datetime=?", [1, old_datetime])
                     
-                    tibia_role = discord.utils.get(msg.guild.roles, name="Tibia")
+                    tibia_role = discord.utils.get(msg.guild.roles, name=self.config["TIBIA_ROLE"])
                     if tibia_role is not None:
                         await msg.edit(content=f'{tibia_role.mention}')
         while True:
             await self.bot.wait_until_ready()
             asyncio.create_task(start_news_ticker(self))
-            await asyncio.sleep(10)
+            await asyncio.sleep(600)
 
     async def get_latest_news_ticker(self):
         content = None
