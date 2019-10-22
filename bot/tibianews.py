@@ -52,6 +52,8 @@ class TibiaNews(commands.Cog):
                 finally:
                     self.sql.executeQuery("UPDATE tibia_news_ticker SET status=? WHERE datetime=?", [1, old_datetime])
                     
+                    await msg.pin()
+
                     tibia_role = discord.utils.get(msg.guild.roles, name=self.config["TIBIA_ROLE"])
                     if tibia_role is not None:
                         await msg.edit(content=f'{tibia_role.mention}')
