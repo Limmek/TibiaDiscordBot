@@ -15,7 +15,7 @@ bot = commands.Bot(command_prefix=(config["PREFIX"].split(" ")))
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.do_not_disturb, activity=discord.Game(LOADING_MESSAGE))
-    print(LOGIN_MESSAGE.format(bot.user.name, bot.user.id, config["PREFIX"], config["SKIP_EXTENTIONS"]))
+    print(LOGIN_MESSAGE.format(bot.user.name, bot.user.id, config["PREFIX"], config["SKIP_EXTENSION"]))
     print(LOADING_DEFAULT_WHITELIST.format(config["DEFAULT_WHITELIST"]))
     print(LOADING_WHITELIST.format(sql.getWhitelist()))
     print(LOADING_ONLINELIST.format(sql.getOnlineList()))
@@ -33,10 +33,10 @@ if __name__ == "__main__":
         print(BOT_LOADING.format(extension))
         bot.load_extension(extension)
 
-    #Load Extentions
-    for extension in Config.load_extentions(config):
+    #Load extension
+    for extension in Config.load_extension(config):
         try:
-            bot.load_extension("extentions." + extension)
+            bot.load_extension("extensions." + extension)
             print(BOT_LOADING_EXTENTION.format(extension))
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
