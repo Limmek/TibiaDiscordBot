@@ -1,3 +1,6 @@
+from os import listdir
+from os.path import isfile, join
+
 from datetime import datetime, timezone
 from constants import *
 
@@ -67,6 +70,7 @@ class Config:
             'TOKEN': '',
             'CHANNEL_ID': '',
             'PREFIX': "! -",
+            'SKIP_EXTENTIONS':[],
             'GUILD_NAME': "",
             'TIBIA_ROLE': "",
             'DEFAULT_WHITELIST': {}
@@ -81,3 +85,8 @@ class Config:
         with open(file) as json_data_file:
             data = json.load(json_data_file)
         return data
+
+    def load_extentions(config):
+        extentions_folder = os.path.dirname(os.path.abspath(__file__)) + "\\extentions\\"
+        extentions = [ex[:ex.index('.')] for ex in listdir(extentions_folder) if isfile(join(extentions_folder, ex))]
+        return list(set(extentions).difference(set(config["SKIP_EXTENTIONS"])))
