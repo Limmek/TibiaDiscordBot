@@ -54,6 +54,12 @@ class Core(commands.Cog):
                     # Update whitelist player level
                     self.sql.updateWhitelistLevel(character.name, int(character.level))
                     
+                    if character.former_names is not None:
+                        for name in character.former_names:
+                            if name in self.sql.getWhitelistNames():
+                                self.sql.removeFromWhitelist(name)
+                                print("Removed former name " + name)
+
                     for online_player in world.online_players:
                         # Adds name and level from world online list if player is online
                         if online_player.name == character.name:

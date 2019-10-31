@@ -99,23 +99,26 @@ class Sql():
     def getOnline(self, name):
         cur = self.conn.cursor()
         n = [name]
-        r = cur.execute("SELECT online FROM online WHERE name=?", n).fetchone()[0]
-        if r == None:
+        ret = cur.execute("SELECT online FROM online WHERE name=?", n).fetchone()
+        if ret == None:
             return False
-        return bool(r)
+        return bool(ret[0])
 
     def getStatus(self, name):
         cur = self.conn.cursor()
         val = [name]
-        r = cur.execute("SELECT status FROM online WHERE name=?", val).fetchone()[0]
-        if r == None:
+        ret = cur.execute("SELECT status FROM online WHERE name=?", val).fetchone()
+        if ret == None:
             return False
-        return bool(r)
+        return bool(ret[0])
 
     def getLevel(self, name):
         cur = self.conn.cursor()
         val = [name]
-        return str(cur.execute("SELECT level FROM online WHERE name=?", val).fetchone()[0])
+        ret = cur.execute("SELECT level FROM online WHERE name=?", val).fetchone()
+        if ret == None:
+            return False
+        return str(ret[0])
     
     def getDeathdate(self, name):
         cur = self.conn.cursor()
