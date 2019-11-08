@@ -13,6 +13,12 @@
 * Online/Offline
 * Player death
 * Player level advance
+* Highscore information
+* Custom thumbnail
+
+# Extensions
+* Guild - add/remove guild memebers from whitelist
+* Tibia News ticker - Sends a message with latest news ticker information and 
 
 ### Commands:
 * ***add*** - Add player to whitelist
@@ -22,9 +28,6 @@
 * ***rank*** - Get players highscore information
 * ***remove*** - Remove player from whitelist
 * ***whitelist*** - Show whitelist
-* ***share*** - Check experience level range of player or level
+* ***share*** - Check level range of player or level, Also shows shareable players from whitelist if name is specified
 * ***rashid*** - Tells where rashid can be found today
 
-
-# Changelog
-* Addded whitelist player level check to share command.
