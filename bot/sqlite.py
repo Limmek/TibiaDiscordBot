@@ -30,26 +30,96 @@ class Sql():
             self.cursor.close()
             self.conn.close()
     
-    def executeQuery(self, query, values):
-        self.conn.cursor()
-        sql = self.conn.execute(query, values)
-        self.conn.commit()
-        return sql
-
     def createTables(self):
         cur = self.conn.cursor()
-        cur.execute('''CREATE TABLE IF NOT EXISTS online
-                        (name text UNIQUE, level int, world text, deathdate text, online int, status int, date text)''')
-
+        cur.execute('''CREATE TABLE IF NOT EXISTS onlinelist
+                        (name text UNIQUE, level int, world text, online int, status int, date text)''')
+        
         cur.execute('''CREATE TABLE IF NOT EXISTS whitelist
                         (name text UNIQUE, world text, level int, date text)''')
+        
+        cur.execute('''CREATE TABLE IF NOT EXISTS lastdeaths
+                        (name text UNIQUE, deathdate text, status int, date text)''')
         self.conn.commit()
 
     def createTable(self, data):
         cur = self.conn.cursor()
         cur.execute(data)
         self.conn.commit()
+    
+    def executeQuery(self, query, values):
+        self.conn.cursor()
+        sql = self.conn.execute(query, values)
+        self.conn.commit()
+        return sql
+    
+    # online
+    def onlineCount(self):
+        cur = self.conn.cursor()
+        return int(cur.execute("SELECT COUNT(1) FROM onlinelist WHERE online=1").fetchone()[0])
+    
+    def addOnlinelist(self, name, level, world, online=1, status=0, date=""):
+        cur = self.conn.cursor()
+        val = [name, level, world, online, status, date]
+        sql = cur.execute("INSERT OR IGNORE INTO onlinelist values (?, ?, ?, ?, ?, ?)", val)
+        self.conn.commit()
+        return sql
+    
+    def updateOnlinelist(self, name, level, online=0, status=0):
+        cur = self.conn.cursor()
+        val = [level, online, status, name]
+        sql = cur.execute("UPDATE onlinelist SET level=?, online=?, status=? WHERE name=?", val)
+        self.conn.commit()
+        return sql
+    
+    def removeOnlinelist(self, name):
+        cur = self.conn.cursor()
+        val = [name]
+        sql = cur.execute("DELETE FROM onlinelist WHERE name=?", val)
+        self.conn.commit()
+        return sql
+    
+    def getOnlineList(self):
+        cur = self.conn.cursor()
+        result = cur.execute("SELECT * FROM onlinelist").fetchall()
+        onlinelist = []
+        for row in result:
+            onlinelist.append(row)
+        return onlinelist
 
+    def getOnlinelistNames(self):
+        cur = self.conn.cursor()
+        result = cur.execute("SELECT name FROM onlinelist").fetchall()
+        onlinelist = []
+        for row in result:
+            onlinelist.append(row[0])
+        return onlinelist
+    
+    def getOnlinelistOnline(self, name):
+        cur = self.conn.cursor()
+        n = [name]
+        ret = cur.execute("SELECT online FROM onlinelist WHERE name=?", n).fetchone()
+        if ret == None:
+            return False
+        return bool(ret[0])
+
+    def getOnlinelistStatus(self, name):
+        cur = self.conn.cursor()
+        val = [name]
+        ret = cur.execute("SELECT status FROM onlinelist WHERE name=?", val).fetchone()
+        if ret == None:
+            return False
+        return bool(ret[0])
+
+    def getOnlinelistLevel(self, name):
+        cur = self.conn.cursor()
+        val = [name]
+        ret = cur.execute("SELECT level FROM onlinelist WHERE name=?", val).fetchone()
+        if ret == None:
+            return False
+        return str(ret[0])
+    
+    # whitelist
     def addWhitelist(self, name, world, level):
         cur = self.conn.cursor()
         val = [name, world, level, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
@@ -57,6 +127,13 @@ class Sql():
         self.conn.commit()
         return sql
 
+    def removeWhitelist(self, name):
+        cur = self.conn.cursor()
+        val = [name]
+        sql = cur.execute("DELETE FROM whitelist WHERE name=?", val)
+        self.conn.commit()
+        return sql
+    
     def getWhitelist(self):
         cur = self.conn.cursor()
         result = cur.execute("SELECT name, world, level FROM whitelist").fetchall()
@@ -64,7 +141,7 @@ class Sql():
         for name, world, level in result:
             whitelist.append([name, world, level])
         return whitelist
-    
+
     def getWhitelistNames(self):
         cur = self.conn.cursor()
         result = cur.execute("SELECT name FROM whitelist").fetchall()
@@ -80,89 +157,32 @@ class Sql():
         self.conn.commit()
         return sql
 
-    def getOnlineList(self):
+    # lastdeaths
+    def addLastDeath(self, name, deathdate, status=0, date=""):
         cur = self.conn.cursor()
-        result = cur.execute("SELECT * FROM online").fetchall()
-        onlinelist = []
-        for row in result:
-            onlinelist.append(row)
-        return onlinelist
+        val = [name, deathdate, status, date]
+        sql = cur.execute("INSERT OR IGNORE INTO lastdeaths values (?, ?, ?, ?)", val)
+        self.conn.commit()
+        return sql
+
+    def removeLastDeath(self, name):
+        cur = self.conn.cursor()
+        val = [name]
+        sql = cur.execute("DELETE FROM lastdeaths WHERE name=?", val)
+        self.conn.commit()
+        return sql
+
+    def updateLastDeath(self, name, deathdate, status=0):
+        cur = self.conn.cursor()
+        val = [deathdate, status, name]
+        sql = cur.execute("UPDATE lastdeaths SET deathdate=?, status=? WHERE name=?", val)
+        self.conn.commit()
+        return sql
     
-    def getOnlineListName(self):
-        cur = self.conn.cursor()
-        result = cur.execute("SELECT name FROM online").fetchall()
-        onlinelist = []
-        for row in result:
-            onlinelist.append(row[0])
-        return onlinelist
-
-    def getOnline(self, name):
-        cur = self.conn.cursor()
-        n = [name]
-        ret = cur.execute("SELECT online FROM online WHERE name=?", n).fetchone()
-        if ret == None:
-            return False
-        return bool(ret[0])
-
-    def getStatus(self, name):
+    def getLastDeath(self, name):
         cur = self.conn.cursor()
         val = [name]
-        ret = cur.execute("SELECT status FROM online WHERE name=?", val).fetchone()
-        if ret == None:
-            return False
-        return bool(ret[0])
-
-    def getLevel(self, name):
-        cur = self.conn.cursor()
-        val = [name]
-        ret = cur.execute("SELECT level FROM online WHERE name=?", val).fetchone()
-        if ret == None:
-            return False
-        return str(ret[0])
-    
-    def getDeathdate(self, name):
-        cur = self.conn.cursor()
-        val = [name]
-        ret = cur.execute("SELECT deathdate FROM online WHERE name=?", val).fetchone()
+        ret = cur.execute("SELECT deathdate, status FROM lastdeaths WHERE name=?", val).fetchone()
         if ret is not None:
-            return str(ret[0])
+            return ret
         return ret
-    
-    def addLastDeathTime(self, name, deathdate):
-        cur = self.conn.cursor()
-        val = [deathdate, name]
-        sql = cur.execute("UPDATE online SET deathdate=? WHERE name=?", val)
-        self.conn.commit()
-        return sql
-    
-    def addToOnlinelist(self, name, level, world, deathdate, online=1, status=0):
-        cur = self.conn.cursor()
-        val = [name, level, world, deathdate, online, status, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
-        sql = cur.execute("INSERT OR IGNORE INTO online values (?, ?, ?, ?, ?, ?, ?)", val)
-        self.conn.commit()
-        return sql
-    
-    def updateOnlinelist(self, name, level, online=0, status=0):
-        cur = self.conn.cursor()
-        val = [level, online, status, name]
-        sql = cur.execute("UPDATE online SET level=?, online=?, status=? WHERE name=?", val)
-        self.conn.commit()
-        return sql
-    
-    def removeFromOnlinelist(self, name):
-        cur = self.conn.cursor()
-        val = [name]
-        sql = cur.execute("DELETE FROM online WHERE name=?", val)
-        self.conn.commit()
-        return sql
-
-    def removeFromWhitelist(self, name):
-        cur = self.conn.cursor()
-        val = [name]
-        sql = cur.execute("DELETE FROM whitelist WHERE name=?", val)
-        self.conn.commit()
-        return sql
-
-    def onlineCount(self):
-        cur = self.conn.cursor()
-        return int(cur.execute("SELECT COUNT(1) FROM online WHERE online=1").fetchone()[0])

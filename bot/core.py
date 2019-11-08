@@ -55,32 +55,33 @@ class Core(commands.Cog):
                     self.sql.updateWhitelistLevel(character.name, int(character.level))
                     
                     if character.former_names is not None:
-                        for name in character.former_names:
-                            if name in self.sql.getWhitelistNames():
-                                self.sql.removeFromWhitelist(name)
-                                print("Removed former name " + name)
+                        for former_name in character.former_names:
+                            if former_name in self.sql.getWhitelistNames():
+                                self.sql.removeWhitelist(former_name)
+                                print("Removed former name " + former_name)
+                            
+                            if former_name in self.sql.getOnlinelistNames():
+                                self.sql.removeOnlinelist(former_name)
+                                print("Removed former name " + former_name)
 
                     for online_player in world.online_players:
                         # Adds name and level from world online list if player is online
                         if online_player.name == character.name:
-                            self.sql.addToOnlinelist(name=character.name, level=online_player.level, world=character.world, deathdate=[Utils.utc_to_local(character.deaths[0].time) if character.deaths else ""][0])
+                            self.sql.addOnlinelist(name=character.name, level=online_player.level, world=character.world)
                             #if not online_player.name in [player.get('name') for player in self.tibia_online_list]:
                             if not self.check_tibia_online_list(self.tibia_online_list, online_player.name):
                                 self.tibia_online_list.append({"name":online_player.name, "level":online_player.level, "world":character.world})
                                         
                     # Send online message
-                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and self.sql.getOnline(character.name) and not self.sql.getStatus(character.name)):
+                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and self.sql.getOnlinelistOnline(character.name) and not self.sql.getOnlinelistStatus(character.name)):
                         print("Discord: {name} ".format(name=character.name) + ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
-                        try:                    
+                        try:
                             embed = discord.Embed(
                                 title=character.name,
                                 url=character.url,
                                 description=ONLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
                                 color=Utils.colors['GREEN'],
                             )
-                            
-                            # Removed due to not seen in notification message on android/ios
-                            #embed.set_author(name=character.name, url=character.url)
                             
                             # Check if user has a custom tumbnail image and add it to embed message
                             Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
@@ -92,11 +93,12 @@ class Core(commands.Cog):
                             msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                         finally:
                             self.sql.updateOnlinelist(character.name, character.level, 1, 1)
-                        
-                        await self.highscore_check(character, embed, msg)
+
+                            # Adds Higescores if on top 300
+                            await highscore_check(character, embed, msg)
 
                     # Send level advance message
-                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and int(self.sql.getLevel(character.name)) < int([x["level"] for x in self.tibia_online_list if x["name"] == character.name][0])):    
+                    if (self.check_tibia_online_list(self.tibia_online_list, character.name) and int(self.sql.getOnlinelistLevel(character.name)) < int([x["level"] for x in self.tibia_online_list if x["name"] == character.name][0])):    
                         print("Discord: {name} ".format(name=character.name) + LEVEL_ADVANCE_MESSAGE.format(level=[x["level"] for x in self.tibia_online_list if x["name"] == character.name][0]))
                         try:                    
                             embed = discord.Embed(
@@ -119,41 +121,46 @@ class Core(commands.Cog):
                             msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                         finally:
                             self.sql.updateOnlinelist(character.name, [x["level"] for x in self.tibia_online_list if x["name"] == character.name][0], 1, 1)
-                        
-                        await self.highscore_check(character, embed, msg)
+
+                            # Adds Higescores if on top 300
+                            await highscore_check(character, embed, msg)
 
                     # Send death message
                     for num, item in enumerate(character.deaths):
-                        if (self.check_tibia_online_list(self.tibia_online_list, character.name) and (self.sql.getDeathdate(character.name) == None or self.sql.getDeathdate(character.name) != Utils.utc_to_local(item.time))):
-                            print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=character.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
-                            try:
-                                embed = discord.Embed(
-                                    title=character.name,
-                                    url=character.url,
-                                    colour=Utils.colors['DARK_BUT_NOT_BLACK']
-                                )
+                        try:
+                            self.sql.addLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time))
+                        except expression as identifier:
+                            print(identifier)
+                        finally:
+                            lastdeath, status = self.sql.getLastDeath(character.name)
+                            if status == 0 or lastdeath != Utils.utc_to_local(item.time):
+                                print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=character.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
+                                try:
+                                    embed = discord.Embed(
+                                        title=character.name,
+                                        url=character.url,
+                                        colour=Utils.colors['DARK_BUT_NOT_BLACK']
+                                    )
+ 
+                                    embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
+                                    
+                                    # Check if user has a custom tumbnail image and add it to embed message
+                                    Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
 
-                                # Removed due to not seen in notification message on android/ios
-                                #embed.set_author(name=character.name, url=character.url)
-                                        
-                                embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
-                                
-                                # Check if user has a custom tumbnail image and add it to embed message
-                                Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
+                                    # Add function send to multiplie channels
+                                    # list of channel ids stored in config
 
-                                # Add function send to multiplie channels
-                                # list of channel ids stored in config
-
-                                await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
-                                msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
-                            finally:
-                                self.sql.addLastDeathTime(character.name, Utils.utc_to_local(item.time))  
-                                await self.highscore_check(character, embed, msg)
+                                    await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
+                                    msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                                finally:
+                                    self.sql.updateLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time), status=1)
+                                    
+                                    await highscore_check(character, embed, msg)
                         break
 
             #print(LOADING_TIBIA_ONLINELIST.format(self.tibia_online_list))
-            
-            for name, level, world, deathdate, online, status, date in self.sql.getOnlineList():
+
+            for name, level, world, online, status, date in self.sql.getOnlineList():
                 try:
                     # Get player info from tibiadata.com
                     character = await Tibia.get_character(name) 
@@ -169,7 +176,7 @@ class Core(commands.Cog):
                         self.sql.updateOnlinelist(character.name, character.level, 0, 1)
                     
                     # Send offline message
-                    if not self.check_tibia_online_list(self.tibia_online_list, character.name) and not self.sql.getOnline(character.name) and self.sql.getStatus(character.name):
+                    if not self.check_tibia_online_list(self.tibia_online_list, character.name) and not self.sql.getOnlinelistOnline(character.name) and self.sql.getOnlinelistStatus(character.name):
                         print("Discord: {name} ".format(name=character.name) + OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world))
                         try:
                             embed = discord.Embed(
@@ -178,9 +185,6 @@ class Core(commands.Cog):
                                 description=OFFLINE_MESSAGE.format(level=character.level, voc=character.vocation, world=character.world),
                                 color=Utils.colors['DARK_RED'],
                             )
-                            
-                            # Removed due to not seen in notification message on android/ios
-                            #embed.set_author(name=character.name, url=character.url)
                             
                             # Check if user has a custom tumbnail image and add it to embed message
                             Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
@@ -191,106 +195,22 @@ class Core(commands.Cog):
                             await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
                             msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
                         finally:
-                            self.sql.removeFromOnlinelist(character.name)               
+                            self.sql.removeOnlinelist(character.name)               
 
-                        await self.highscore_check(character, embed, msg)
-                
+                            # Adds Higescores if on top 300
+                            await highscore_check(character, embed, msg)
+
             #print(LOADING_ONLINELIST.format(self.sql.getOnlineList()))
-            #await asyncio.sleep(30) # task runs every 30 seconds
 
         while True:
             asyncio.create_task(start_task(self)) # Fix for loop breaking if any error ocurred while runing online_task??
             await asyncio.sleep(60) # run task in seperate thread every 60 seconds
-
 
     async def activity_task(self):
         await self.bot.wait_until_ready()
         while True:
             await self.bot.change_presence(status=discord.Status.online, activity=discord.Game(name=ACTIVITY_TITLE.format(online=self.sql.onlineCount())))
             await asyncio.sleep(15) # task runs every 15 seconds
-
-    async def highscore_check(self, character, embed, msg):
-        # Highscores
-        # Check Experience
-        experience = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.EXPERIENCE)
-        if experience is not None:
-            embed.add_field(name=HIGHSCORE_EXP_MESSAGE.format(experience.rank), value=str(experience.value), inline=True)
-            await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check magic level if druid or sorcerer
-        if (character.vocation in [tibiapy.Vocation.DRUID, tibiapy.Vocation.ELDER_DRUID, tibiapy.Vocation.SORCERER, tibiapy.Vocation.MASTER_SORCERER]):
-            magic = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.MAGIC_LEVEL)
-            if magic is not None:
-                
-                embed.add_field(name=HIGHSCORE_MAGIC_MESSAGE.format(magic.rank), value=str(magic.value), inline=True)
-                await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check distance skill if paladin
-        if (character.vocation in [tibiapy.Vocation.PALADIN, tibiapy.Vocation.ROYAL_PALADIN]):
-            distance = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.DISTANCE_FIGHTING)
-            if distance is not None:
-                
-                embed.add_field(name=HIGHSCORE_DISTANCE_MESSAGE.format(distance.rank), value=str(distance.value), inline=True)
-                await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check mele skills if knight
-        if (character.vocation in [tibiapy.Vocation.KNIGHT, tibiapy.Vocation.ELITE_KNIGHT]):
-            # Sword skill
-            sword = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.SWORD_FIGHTING)
-            if sword is not None:
-                
-                embed.add_field(name=HIGHSCORE_SWORD_MESSAGE.format(sword.rank), value=str(sword.value), inline=True)
-                await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-            # Axe skill
-            axe = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.AXE_FIGHTING)
-            if axe is not None:
-                
-                embed.add_field(name=HIGHSCORE_AXE_MESSAGE.format(axe.rank), value=str(axe.value), inline=True)
-                await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-            # Club skill
-            club = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.CLUB_FIGHTING)
-            if club is not None:
-                
-                embed.add_field(name=HIGHSCORE_CLUB_MESSAGE.format(club.rank), value=str(club.value), inline=True)
-                await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check Shielding all vocations
-        shielding = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.SHIELDING)
-        if shielding is not None:
-            
-            embed.add_field(name=HIGHSCORE_SHIELDING_MESSAGE.format(shielding.rank), value=str(shielding.value), inline=True)
-            await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check Fist all vocations
-        fist = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.FIST_FIGHTING)
-        if fist is not None:
-            
-            embed.add_field(name=HIGHSCORE_FIST_MESSAGE.format(fist.rank), value=str(fist.value), inline=True)
-            await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check Fishing all vocations
-        fishing = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.FISHING)
-        if fishing is not None:
-            
-            embed.add_field(name=HIGHSCORE_FISHING_MESSAGE.format(fishing.rank), value=str(fishing.value), inline=True)
-            await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check Fishing all vocations
-        achievements = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.ACHIEVEMENTS)
-        if achievements is not None:
-            
-            embed.add_field(name=HIGHSCORE_ACHIEVEMENTS_MESSAGE.format(achievements.rank), value=str(achievements.value), inline=True)
-            await msg.edit(content=LOADING_MESSAGE, embed=embed)
-
-        # Check Fishing all vocations
-        loyalty = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.LOYALTY_POINTS)
-        if loyalty is not None:
-            embed.add_field(name=HIGHSCORE_LOYALTY_POINTS_MESSAGE.format(loyalty.rank), value=str(loyalty.value), inline=True)
-            await msg.edit(content=LOADING_MESSAGE, embed=embed)
-        
-        await msg.edit(content="")
 
 def setup(bot):
     bot.add_cog(Core(bot))
