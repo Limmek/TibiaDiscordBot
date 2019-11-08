@@ -37,6 +37,7 @@ class Core(commands.Cog):
                   
         async def start_task(self):
             self.tibia_online_list = []
+            
             for name in self.sql.getWhitelistNames():
                 try:
                     # Get player info from tibiadata.com
@@ -108,9 +109,6 @@ class Core(commands.Cog):
                                 color=Utils.colors['GOLD'],
                             )
                             
-                            # Removed due to not seen in notification message on android/ios
-                            #embed.set_author(name=character.name, url=character.url)
-                            
                             # Check if user has a custom tumbnail image and add it to embed message
                             Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
                             
@@ -131,7 +129,7 @@ class Core(commands.Cog):
                             self.sql.addLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time))
                         finally:
                             lastdeath, status = self.sql.getLastDeath(character.name)
-                            if status == 0 or lastdeath != Utils.utc_to_local(item.time):
+                            if status == 0 and lastdeath != Utils.utc_to_local(item.time):
                                 print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=character.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
                                 try:
                                     embed = discord.Embed(
@@ -157,7 +155,7 @@ class Core(commands.Cog):
                         break
 
             #print(LOADING_TIBIA_ONLINELIST.format(self.tibia_online_list))
-
+            
             for name, level, world, online, status, date in self.sql.getOnlineList():
                 try:
                     # Get player info from tibiadata.com

@@ -39,6 +39,9 @@ class Guild(commands.Cog):
                         pass
                     finally:
                         whitelist = self.sql.addWhitelist(character.name, character.world, character.level)
+                        for num, item in enumerate(character.deaths):
+                            lastdeath = self.sql.addLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time), status=1)
+                            break
                         await msg.edit(content=ADD_WHITELIST_MESSAGE.format(name=character.name, level=character.level, voc=character.vocation, world=character.world))
         
         await self.bot.wait_until_ready()
