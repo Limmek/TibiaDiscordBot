@@ -129,8 +129,6 @@ class Core(commands.Cog):
                     for num, item in enumerate(character.deaths):
                         try:
                             self.sql.addLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time))
-                        except expression as identifier:
-                            print(identifier)
                         finally:
                             lastdeath, status = self.sql.getLastDeath(character.name)
                             if status == 0 or lastdeath != Utils.utc_to_local(item.time):
