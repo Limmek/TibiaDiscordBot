@@ -26,6 +26,12 @@ async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.MissingRequiredArgument):
         await ctx.send(ERROR_MISSING_ARGUMENT)
 
+#bot.event
+#@is_channel(config['CHANNEL_IDS']) # not working
+#async def on_message(ctx):
+#    await bot.process_commands(ctx)
+    #print(ctx)
+
 if __name__ == "__main__":
     print(BOT_START)
     # Load bot core

@@ -16,9 +16,11 @@ else:
     ssl._create_default_https_context = _create_unverified_https_context
 
 from discord.ext import commands
-def is_channel(channel_id):
+def is_channel(channel_ids):
     def predicate(ctx):
-        return ctx.message.channel.id == channel_id
+        for i, j in enumerate(channel_ids):
+            if int(j) == ctx.message.channel.id:
+                return ctx.message.channel.id == int(channel_ids[i])
     return commands.check(predicate)
 
 class Utils:
@@ -74,6 +76,7 @@ class Config:
         config = {
             'TOKEN': '',
             'CHANNEL_ID': '',
+            'CHANNEL_IDS': [],
             'PREFIX': "! -",
             'SKIP_EXTENSION':[],
             'GUILD_NAME': "",

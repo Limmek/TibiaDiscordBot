@@ -193,5 +193,11 @@ class Test(commands.Cog):
             print(str(reaction.emoji))
             pass
 
+    @commands.Cog.listener()
+    @is_channel(Config.load_config()['CHANNEL_IDS']) # not working
+    async def on_message(self, ctx):
+        print(ctx) 
+        #await self.bot.process_commands(ctx)
+        
 def setup(bot):
     bot.add_cog(Test(bot))
