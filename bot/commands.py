@@ -17,11 +17,13 @@ class Commands(commands.Cog):
         self.sql = Sql()
 
     @commands.command(name='shutdown', aliases=[], brief="Shutdown", pass_context=True, hidden=True)
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def shutdown(self, ctx):
         msg = await ctx.send("Shuting down....")
         await self.bot.logout()
 
     @commands.command(name='restart', aliases=[], brief="Restart", pass_context=True, hidden=True)
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def restart(self, ctx):
         msg = await ctx.send("Shuting down")
         await ctx.trigger_typing()
@@ -34,6 +36,7 @@ class Commands(commands.Cog):
             
 
     @commands.command(name='whitelist', aliases=['wl', 'wlist'], brief="Show whitelist")
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def whitelist(self, ctx):
         msg = await ctx.send(LOADING_WHITELIST_MESSAGE)
         await ctx.trigger_typing()
@@ -56,6 +59,7 @@ class Commands(commands.Cog):
         await msg.edit(content=LOADING_DONE, embed=embed)
     
     @commands.command(name='add', aliases=[], brief="Add player to whitelist")
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def add(self, ctx, *, name):
         await ctx.trigger_typing()
         
@@ -73,6 +77,7 @@ class Commands(commands.Cog):
         await msg.edit(content=ADD_WHITELIST_MESSAGE.format(name=character.name, level=character.level, voc=character.vocation, world=character.world)) 
             
     @commands.command(name='remove', aliases=[], brief="Remove player from whitelist")
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def remove(self, ctx, *, name):
         await ctx.trigger_typing()
 
@@ -88,6 +93,7 @@ class Commands(commands.Cog):
         await msg.edit(content=REMOVE_WHITELIST_MESSAGE.format(name=character.name, level=character.level, voc=character.vocation, world=character.world)) 
 
     @commands.command(name='pg', aliases=['time'], brief="Show players online time")
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def pg(self, ctx, *, name):
         await ctx.trigger_typing()
         
@@ -129,6 +135,7 @@ class Commands(commands.Cog):
         await msg.edit(content=LOADING_DONE, embed=embed)
 
     @commands.command(name='exp', aliases=['xp'], brief="Show players experience change if player is on top 300")
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def exp(self, ctx, *, name):
         await ctx.trigger_typing()
         
@@ -165,6 +172,7 @@ class Commands(commands.Cog):
         await msg.edit(content=LOADING_DONE, embed=embed)
 
     @commands.command(name='player', aliases=['name', 'n'], brief="Get information about player by name", pass_context=True)
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def player(self, ctx, *, name):  
         await ctx.trigger_typing()
         
@@ -215,6 +223,7 @@ class Commands(commands.Cog):
         await msg.edit(content=LOADING_DONE, embed=embed)
 
     @commands.command(name='rank', aliases=['top'], brief="Get players highscore information", pass_context=True)
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def rank(self, ctx, *, name):  
         await ctx.trigger_typing()
 
@@ -243,6 +252,7 @@ class Commands(commands.Cog):
         await highscore_check(character, embed, msg)
 
     @commands.command(name='share', aliases=['s'], brief="Check experience level range of player or level", pass_context=True)
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def share(self, ctx, *, name):  
         await ctx.trigger_typing()
         
@@ -290,6 +300,7 @@ class Commands(commands.Cog):
             await msg.edit(embed=embed)
 
     @commands.command(name='rashid', aliases=['r'], brief="Tells where rashid can be found today", pass_context=True)
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def rashid(self, ctx):  
         await ctx.trigger_typing()
         embed = discord.Embed(
@@ -319,6 +330,7 @@ class Commands(commands.Cog):
         msg = await ctx.send(content=EMBED_BLANK, embed=embed)
 
     @commands.command(name='check_yasir', aliases=['yasir', 'y'], brief="Yasir information from https://yasironline.tibiageeks.com", pass_context=True)
+    @is_channel(int(Config.load_config()['CHANNEL_ID']))
     async def check_yasir(self, ctx):
 
         embed = discord.Embed(

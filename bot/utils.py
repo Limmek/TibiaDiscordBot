@@ -15,6 +15,11 @@ else:
     # Handle target environment that doesn't support HTTPS verification
     ssl._create_default_https_context = _create_unverified_https_context
 
+from discord.ext import commands
+def is_channel(channel_id):
+    def predicate(ctx):
+        return ctx.message.channel.id == channel_id
+    return commands.check(predicate)
 
 class Utils:
     colors = {

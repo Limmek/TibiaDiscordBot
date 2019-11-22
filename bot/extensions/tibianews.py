@@ -35,10 +35,6 @@ class TibiaNews(commands.Cog):
     
     async def update_news_ticker(self):
         async def start_news_ticker(self):
-            # News
-            #data = await Tibia.get_news()
-            #print(data.title) print(data.date) print(data.content)
-            
             content = await self.get_latest_news()
             datetime, content = self.tibia_news_ticker(content)
 
@@ -94,11 +90,7 @@ class TibiaNews(commands.Cog):
 
     # Latest news
     async def update_news(self):
-        async def start_news(self):
-            # News
-            #data = await Tibia.get_news()
-            #print(data.title) print(data.date) print(data.content)
-            
+        async def start_news(self):            
             content = await self.get_latest_news()
             datetime, title, content = self.tibia_news(content)
 
