@@ -18,16 +18,18 @@
 
 # Extensions
 * Guild - add/remove guild memebers from whitelist
-* Tibia News ticker - Sends a message with latest news ticker information and 
+* Tibia News and News Ticker - Sends a message with latest news ticker information and pin it.
 
 ### Commands:
-* ***add*** - Add player to whitelist
-* ***exp*** - Show players experience change if player is on top 300
-* ***pg*** - Show players online time
-* ***player*** - Get information about player by name
-* ***rank*** - Get players highscore information
-* ***remove*** - Remove player from whitelist
-* ***whitelist*** - Show whitelist
-* ***share*** - Check level range of player or level, Also shows shareable players from whitelist if name is specified
-* ***rashid*** - Tells where rashid can be found today
+* ***add***        - Add player to whitelist
+* ***exp***        - Show players experience change if player is on top 300
+* ***onlinelist*** - Show onlinelist
+* ***pg***         - Show players online time
+* ***player***      - Get information about player by name
+* ***rank***       - Get players highscore information
+* ***rashid***     - Tells where rashid can be found today
+* ***remove***     - Remove player from whitelist
+* ***share***      - Check experience level range of player or level
+* ***whitelist***  - Show whitelist
+* ***yasir***      - Yasir information from https://yasironline.tibiageeks.com
 
