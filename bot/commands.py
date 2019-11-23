@@ -33,8 +33,30 @@ class Commands(commands.Cog):
             pass
         finally:
             os.system("py -3 " + os.path.dirname(os.path.realpath(__file__)) + "\\bot.py")
-            
 
+    @commands.command(name='onlinelist', aliases=['ol', 'online'], brief="Show onlinelist")
+    @is_channel(Config.load_config()['CHANNEL_IDS'])
+    async def onlinelist(self, ctx):
+        msg = await ctx.send(LOADING_ONLINELIST_MESSAGE)
+        await ctx.trigger_typing()
+        onlinelist = self.sql.getOnlinelistNames()
+        embed = discord.Embed(
+            title=TITLE_WHITELIST,
+            colour=Utils.colors['WHITE']
+        )
+
+        embed.set_footer(
+            text=f'Requested by {ctx.message.author.name}',
+            icon_url=ctx.message.author.avatar_url
+        )
+
+        for name in onlinelist:
+            character = await TibiaData.get_character(name) # Get character information from tibiadata.com
+            text = "{} {} on {}".format(character.level, character.vocation, character.world)
+            embed.add_field(name=name, value=text, inline=False)
+            await msg.edit(content=LOADING_ONLINELIST_MESSAGE, embed=embed)
+        await msg.edit(content=LOADING_DONE, embed=embed)
+            
     @commands.command(name='whitelist', aliases=['wl', 'wlist'], brief="Show whitelist")
     @is_channel(Config.load_config()['CHANNEL_IDS'])
     async def whitelist(self, ctx):
@@ -329,12 +351,16 @@ class Commands(commands.Cog):
         embed.title = RASHID_MESSAGES[random.randrange(0,len(RASHID_MESSAGES))].format(town=rashid.get(rashid_day))
         msg = await ctx.send(content=EMBED_BLANK, embed=embed)
 
-    @commands.command(name='check_yasir', aliases=['yasir', 'y'], brief="Yasir information from https://yasironline.tibiageeks.com", pass_context=True)
+    @commands.command(name='yasir', aliases=['y'], brief="Yasir information from https://yasironline.tibiageeks.com", pass_context=True)
     @is_channel(Config.load_config()['CHANNEL_IDS'])
-    async def check_yasir(self, ctx):
-
+    async def yasir(self, ctx):
+        await ctx.trigger_typing()
+        
         embed = discord.Embed(
-            colour=Utils.colors['WHITE']
+            colour=Utils.colors['WHITE'],
+            url="https://yasironline.tibiageeks.com/",
+            title="Yasir #TODO",
+            description="For now visit https://yasironline.tibiageeks.com"
         )
 
         embed.set_footer(
@@ -342,7 +368,7 @@ class Commands(commands.Cog):
             icon_url=ctx.message.author.avatar_url
         )
         
-        msg = await ctx.send(content='Yasir #TODO', embed=embed)
+        msg = await ctx.send(embed=embed)
 
 def setup(bot):
     bot.add_cog(Commands(bot))

@@ -29,7 +29,7 @@ class Core(commands.Cog):
     # Update Whitelist with default whitelist data
     async def update_default_whitelist(self):
         for name in self.config["DEFAULT_WHITELIST"]:
-            char = await TibiaData.get_character(name)
+            char = await Tibia.get_character(name)
             self.sql.addWhitelist(char.name, char.world, int(char.level))
 
     async def online_task(self):
@@ -40,7 +40,7 @@ class Core(commands.Cog):
             
             for name in self.sql.getWhitelistNames():
                 try:
-                    # Get player info from tibiadata.com
+                    # Get player info from tibia.com
                     character = await Tibia.get_character(name) 
                     if character is None: return True
                     # Get world data from tibia.com
@@ -158,7 +158,7 @@ class Core(commands.Cog):
             
             for name, level, world, online, status, date in self.sql.getOnlineList():
                 try:
-                    # Get player info from tibiadata.com
+                    # Get player info from tibia.com
                     character = await Tibia.get_character(name) 
                     if character is None: return True
                 
