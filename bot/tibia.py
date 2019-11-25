@@ -123,7 +123,6 @@ class Tibia:
                         return entrie
         return None
 
-
     # Get news from tibia.com
     async def get_news(news_id=1):
         url = tibiapy.News.get_url(news_id)
@@ -144,7 +143,7 @@ async def highscore_check(character, embed, msg):
     # Check Experience
     experience = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.EXPERIENCE)
     if experience is not None:
-        embed.add_field(name=HIGHSCORE_EXP_MESSAGE.format(experience.rank), value=str(experience.value), inline=True)
+        embed.add_field(name=HIGHSCORE_EXP_MESSAGE.format(experience.value), value=HIGHSCORE_RANK.format(experience.rank), inline=True)
         await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check magic level if druid or sorcerer
@@ -152,7 +151,7 @@ async def highscore_check(character, embed, msg):
         magic = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.MAGIC_LEVEL)
         if magic is not None:
             
-            embed.add_field(name=HIGHSCORE_MAGIC_MESSAGE.format(magic.rank), value=str(magic.value), inline=True)
+            embed.add_field(name=HIGHSCORE_MAGIC_MESSAGE.format(magic.value), value=HIGHSCORE_RANK.format(magic.rank), inline=True)
             await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check distance skill if paladin
@@ -160,7 +159,7 @@ async def highscore_check(character, embed, msg):
         distance = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.DISTANCE_FIGHTING)
         if distance is not None:
             
-            embed.add_field(name=HIGHSCORE_DISTANCE_MESSAGE.format(distance.rank), value=str(distance.value), inline=True)
+            embed.add_field(name=HIGHSCORE_DISTANCE_MESSAGE.format(distance.value), value=HIGHSCORE_RANK.format(distance.rank), inline=True)
             await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check mele skills if knight
@@ -169,55 +168,55 @@ async def highscore_check(character, embed, msg):
         sword = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.SWORD_FIGHTING)
         if sword is not None:
             
-            embed.add_field(name=HIGHSCORE_SWORD_MESSAGE.format(sword.rank), value=str(sword.value), inline=True)
+            embed.add_field(name=HIGHSCORE_SWORD_MESSAGE.format(sword.value), value=HIGHSCORE_RANK.format(sword.rank), inline=True)
             await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
         # Axe skill
         axe = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.AXE_FIGHTING)
         if axe is not None:
             
-            embed.add_field(name=HIGHSCORE_AXE_MESSAGE.format(axe.rank), value=str(axe.value), inline=True)
+            embed.add_field(name=HIGHSCORE_AXE_MESSAGE.format(axe.value), value=HIGHSCORE_RANK.format(axe.rank), inline=True)
             await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
         # Club skill
         club = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.CLUB_FIGHTING)
         if club is not None:
             
-            embed.add_field(name=HIGHSCORE_CLUB_MESSAGE.format(club.rank), value=str(club.value), inline=True)
+            embed.add_field(name=HIGHSCORE_CLUB_MESSAGE.format(club.value), value=HIGHSCORE_RANK.format(club.rank), inline=True)
             await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check Shielding all vocations
     shielding = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.SHIELDING)
     if shielding is not None:
         
-        embed.add_field(name=HIGHSCORE_SHIELDING_MESSAGE.format(shielding.rank), value=str(shielding.value), inline=True)
+        embed.add_field(name=HIGHSCORE_SHIELDING_MESSAGE.format(shielding.value), value=HIGHSCORE_RANK.format(shielding.rank), inline=True)
         await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check Fist all vocations
     fist = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.FIST_FIGHTING)
     if fist is not None:
         
-        embed.add_field(name=HIGHSCORE_FIST_MESSAGE.format(fist.rank), value=str(fist.value), inline=True)
+        embed.add_field(name=HIGHSCORE_FIST_MESSAGE.format(fist.value), value=HIGHSCORE_RANK.format(fist.rank), inline=True)
         await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check Fishing all vocations
     fishing = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.FISHING)
     if fishing is not None:
         
-        embed.add_field(name=HIGHSCORE_FISHING_MESSAGE.format(fishing.rank), value=str(fishing.value), inline=True)
+        embed.add_field(name=HIGHSCORE_FISHING_MESSAGE.format(fishing.value), value=HIGHSCORE_RANK.format(fishing.rank), inline=True)
         await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check Fishing all vocations
     achievements = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.ACHIEVEMENTS)
     if achievements is not None:
         
-        embed.add_field(name=HIGHSCORE_ACHIEVEMENTS_MESSAGE.format(achievements.rank), value=str(achievements.value), inline=True)
+        embed.add_field(name=HIGHSCORE_ACHIEVEMENTS_MESSAGE.format(achievements.value), value=HIGHSCORE_RANK.format(achievements.rank), inline=True)
         await msg.edit(content=LOADING_MESSAGE, embed=embed)
 
     # Check Fishing all vocations
     loyalty = await TibiaData.check_player_highscore(character.name, character.world, tibiapy.Category.LOYALTY_POINTS)
     if loyalty is not None:
-        embed.add_field(name=HIGHSCORE_LOYALTY_POINTS_MESSAGE.format(loyalty.rank), value=str(loyalty.value), inline=True)
+        embed.add_field(name=HIGHSCORE_LOYALTY_POINTS_MESSAGE.format(loyalty.value), value=HIGHSCORE_RANK.format(loyalty.rank), inline=True)
         await msg.edit(content=LOADING_MESSAGE, embed=embed)
     
     await msg.edit(content="")
