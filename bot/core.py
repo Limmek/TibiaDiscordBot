@@ -125,33 +125,31 @@ class Core(commands.Cog):
 
                     # Send death message
                     for num, item in enumerate(character.deaths):
-                        try:
-                            self.sql.addLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time))
-                        finally:
-                            lastdeath, status = self.sql.getLastDeath(character.name)
-                            if status == 0 and lastdeath != Utils.utc_to_local(item.time):
-                                print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=character.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
-                                try:
-                                    embed = discord.Embed(
-                                        title=character.name,
-                                        url=character.url,
-                                        colour=Utils.colors['DARK_BUT_NOT_BLACK']
-                                    )
- 
-                                    embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
-                                    
-                                    # Check if user has a custom tumbnail image and add it to embed message
-                                    Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
+                        self.sql.addLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time))
+                        lastdeath, status = self.sql.getLastDeath(character.name)
+                        if status == 0 or lastdeath != Utils.utc_to_local(item.time):
+                            print("Discord: {name} ".format(name=character.name) + KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=character.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK))
+                            try:
+                                embed = discord.Embed(
+                                    title=character.name,
+                                    url=character.url,
+                                    colour=Utils.colors['DARK_BUT_NOT_BLACK']
+                                )
 
-                                    # Add function send to multiplie channels
-                                    # list of channel ids stored in config
+                                embed.description = KILL_MESSAGE.format(date=Utils.utc_to_local(item.time), level=item.level, killers=", ".join([killer.name for killer in item.killers if killer.name != item.name]), assists=", ".join([killer.name for killer in item.assists if killer.name != item.name]) if item.assists else EMBED_BLANK)
+                                
+                                # Check if user has a custom tumbnail image and add it to embed message
+                                Utils.add_thumbnail(embed, character.name, self.config["DEFAULT_WHITELIST"])
 
-                                    await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
-                                    msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
-                                finally:
-                                    self.sql.updateLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time), status=1)
-                                    
-                                    await highscore_check(character, embed, msg)
+                                # Add function send to multiplie channels
+                                # list of channel ids stored in config
+
+                                await self.bot.get_channel(int(self.config["CHANNEL_ID"])).trigger_typing()
+                                msg = await self.bot.get_channel(int(self.config["CHANNEL_ID"])).send(embed=embed)
+                            finally:
+                                self.sql.updateLastDeath(name=character.name, deathdate=Utils.utc_to_local(item.time), status=1)
+                                
+                                await highscore_check(character, embed, msg)
                         break
 
             #print(LOADING_TIBIA_ONLINELIST.format(self.tibia_online_list))
