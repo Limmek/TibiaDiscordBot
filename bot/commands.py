@@ -32,7 +32,7 @@ class Commands(commands.Cog):
         except:
             pass
         finally:
-            os.system("py -3 " + os.path.dirname(os.path.realpath(__file__)) + "\\bot.py")
+            os.system("python " + os.path.dirname(os.path.realpath(__file__)) + "\\bot.py")
 
     @commands.command(name='onlinelist', aliases=['ol', 'online'], brief="Show onlinelist")
     @is_channel(Config.load_config()['CHANNEL_IDS'])

@@ -64,8 +64,9 @@ class TibiaNews(commands.Cog):
                 finally:
                     self.sql.executeQuery("UPDATE tibia_news_ticker SET status=? WHERE datetime=?", [1, old_datetime])
                     
+                    await self.removeOldPins(msg)
                     await msg.pin()
-
+                    
                     tibia_role = discord.utils.get(msg.guild.roles, name=self.config["TIBIA_ROLE"])
                     if tibia_role is not None:
                         await msg.edit(content=f'{tibia_role.mention}')
@@ -124,6 +125,7 @@ class TibiaNews(commands.Cog):
 
                     self.sql.executeQuery("UPDATE tibia_news SET status=? WHERE datetime=?", [1, old_datetime])
                     
+                    await self.removeOldPins(msg)
                     await msg.pin()
                     
                     tibia_role = discord.utils.get(msg.guild.roles, name=self.config["TIBIA_ROLE"])
@@ -146,6 +148,13 @@ class TibiaNews(commands.Cog):
         title = news_ticker.find("div", class_="NewsHeadlineText").find("p").text
         content = news_ticker.find("table", class_="").find("tr").text
         return date, str(title), content
+    
+    async def removeOldPins(self, msg):
+        pins = await msg.channel.pins()
+        if len(pins) >= 25:
+            #await msg.channel.delete_messages(pins)
+            for m in pins[-(len(pins)-24):]:
+                await m.unpin()
 
 def setup(bot):
     bot.add_cog(TibiaNews(bot))
